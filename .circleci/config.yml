@@ -1,0 +1,20 @@
+version: 2.1
+jobs:
+  validate:
+    docker:
+      - image: cimg/node:22.14.0
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Parse the browser modules
+          command: |
+            node --input-type=module --check < main.js
+            node --input-type=module --check < src/awesome.js
+      - run:
+          name: Verify the entry point and browser behavior
+          command: node .circleci/check-behavior.mjs
+workflows:
+  validate:
+    jobs:
+      - validate
