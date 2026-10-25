@@ -1,4 +1,9 @@
 version: 2.1
+
+parameters:
+  force_full:
+    type: boolean
+    default: false
 jobs:
   validate:
     docker:
@@ -6,6 +11,13 @@ jobs:
     resource_class: small
     steps:
       - checkout
+      - run:
+          name: Check whether full verification is needed
+          environment:
+            CI_DEFAULT_BRANCH: "master"
+            CI_BASE_REVISION: << pipeline.git.base_revision >>
+            CI_FORCE_FULL: << pipeline.parameters.force_full >>
+          command: bash .circleci/should-run.sh
       - run:
           name: Parse the browser modules
           command: |
@@ -16,5 +28,10 @@ jobs:
           command: node .circleci/check-behavior.mjs
 workflows:
   validate:
+    when:
+      or:
+        - << pipeline.parameters.force_full >>
+        - not:
+            equal: ["master", << pipeline.git.branch >>]
     jobs:
       - validate
